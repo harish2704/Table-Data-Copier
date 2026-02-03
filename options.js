@@ -49,12 +49,19 @@ function showSaveStatus(message) {
 
 // Load and display keyboard shortcut information
 function loadShortcutInfo() {
-  // Get the current shortcut from Chrome commands API
+  // Get the current shortcuts from Chrome commands API
   chrome.commands.getAll((commands) => {
     const copyCommand = commands.find(cmd => cmd.name === 'copy-table-data');
+    const flippedCommand = commands.find(cmd => cmd.name === 'copy-table-data-flipped');
+    
     if (copyCommand) {
       const shortcutElement = document.getElementById('currentShortcut');
       shortcutElement.textContent = copyCommand.shortcut || 'Ctrl+Shift+C';
+    }
+    
+    if (flippedCommand) {
+      const flippedShortcutElement = document.getElementById('flippedShortcut');
+      flippedShortcutElement.textContent = flippedCommand.shortcut || 'Ctrl+Shift+F';
     }
   });
 }

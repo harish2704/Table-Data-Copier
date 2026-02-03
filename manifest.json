@@ -36,6 +36,13 @@
         "mac": "Command+Shift+C"
       },
       "description": "Copy selected table data"
+    },
+    "copy-table-data-flipped": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Copy selected table data with rows and columns flipped"
     }
   }
 }

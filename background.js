@@ -7,6 +7,12 @@ chrome.runtime.onInstalled.addListener(() => {
     title: 'Copy Table Data',
     contexts: ['all']
   });
+  
+  chrome.contextMenus.create({
+    id: 'copyTableDataFlipped',
+    title: 'Copy Table Data Flipped',
+    contexts: ['all']
+  });
 });
 
 // Handle context menu clicks
@@ -14,6 +20,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'copyTableData') {
     // Send message to content script to copy table data
     chrome.tabs.sendMessage(tab.id, { action: 'copyTableData' });
+  } else if (info.menuItemId === 'copyTableDataFlipped') {
+    // Send message to content script to copy flipped table data
+    chrome.tabs.sendMessage(tab.id, { action: 'copyTableDataFlipped' });
   }
 });
 
@@ -25,6 +34,14 @@ chrome.commands.onCommand.addListener((command) => {
       if (tabs.length > 0) {
         // Send message to content script to copy table data
         chrome.tabs.sendMessage(tabs[0].id, { action: 'copyTableData' });
+      }
+    });
+  } else if (command === 'copy-table-data-flipped') {
+    // Get the active tab
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length > 0) {
+        // Send message to content script to copy flipped table data
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'copyTableDataFlipped' });
       }
     });
   }
