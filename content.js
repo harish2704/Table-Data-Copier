@@ -164,13 +164,36 @@ function copySelectedData() {
     const useCSV = result.useCSV || false;
     const delimiter = useCSV ? ',' : '\t';
     
-    // Extract data from selected cells
-    const data = selectedCells.map(cell => {
-      return cell.textContent.trim().replace(/\s+/g, ' ');
+    // Group cells by row and sort by column index
+    const rows = {};
+    
+    selectedCells.forEach(cell => {
+      const row = cell.parentElement;
+      const rowIndex = row.rowIndex;
+      const colIndex = Array.prototype.indexOf.call(row.children, cell);
+      
+      if (!rows[rowIndex]) {
+        rows[rowIndex] = [];
+      }
+      
+      rows[rowIndex].push({
+        cell: cell,
+        colIndex: colIndex,
+        text: cell.textContent.trim().replace(/\s+/g, ' ')
+      });
     });
     
-    // Join data with appropriate delimiter
-    const output = data.join(delimiter);
+    // Sort rows by index and cells within each row by column index
+    const sortedRows = Object.keys(rows)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .map(rowIndex => {
+        return rows[rowIndex].sort((a, b) => a.colIndex - b.colIndex);
+      });
+    
+    // Build the output with proper row/column structure
+    const output = sortedRows.map(rowCells => {
+      return rowCells.map(cellData => cellData.text).join(delimiter);
+    }).join('\n');
     
     // Copy to clipboard
     navigator.clipboard.writeText(output).then(() => {
