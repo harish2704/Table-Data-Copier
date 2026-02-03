@@ -2,6 +2,8 @@
 
 let selectedCells = [];
 let isTableSelectionMode = false;
+let dragStartCell = null;
+let isDragging = false;
 
 // Initialize the extension
 function init() {
@@ -23,15 +25,24 @@ function handleMouseDown(event) {
   // Check if Ctrl key is pressed and it's a left click
   if (event.ctrlKey && event.button === 0) {
     const target = event.target;
-    
+
     // Check if the target is a table cell
     if (target.tagName === 'TD' || target.tagName === 'TH') {
       event.preventDefault();
       event.stopPropagation();
-      
-      // Toggle cell selection
-      toggleCellSelection(target);
-      isTableSelectionMode = true;
+
+      // Start drag selection or toggle individual cell
+      if (!isDragging) {
+        dragStartCell = target;
+        isDragging = true;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        // Clear previous selection and select the start cell
+        clearSelection();
+        selectCells([target]);
+        isTableSelectionMode = true;
+      }
     }
   } else {
     // If not Ctrl+click, clear selection if in selection mode
@@ -40,6 +51,28 @@ function handleMouseDown(event) {
       isTableSelectionMode = false;
     }
   }
+}
+
+// Handle mouse move events for drag selection
+function handleMouseMove(event) {
+  if (isDragging && dragStartCell) {
+    const target = event.target;
+    
+    // Check if the target is a table cell
+    if (target.tagName === 'TD' || target.tagName === 'TH') {
+      // Get all cells in the rectangle between start and current cell
+      const cellsToSelect = getCellsInRectangle(dragStartCell, target);
+      selectCells(cellsToSelect);
+    }
+  }
+}
+
+// Handle mouse up events to end drag selection
+function handleMouseUp(event) {
+  isDragging = false;
+  dragStartCell = null;
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
 }
 
 // Handle key down events
@@ -59,10 +92,10 @@ function handleKeyUp(event) {
   }
 }
 
-// Toggle cell selection
+// Toggle cell selection (for individual cell selection)
 function toggleCellSelection(cell) {
   const cellIndex = selectedCells.indexOf(cell);
-  
+
   if (cellIndex === -1) {
     // Add cell to selection
     selectedCells.push(cell);
@@ -72,6 +105,46 @@ function toggleCellSelection(cell) {
     selectedCells.splice(cellIndex, 1);
     cell.style.backgroundColor = ''; // Remove highlight
   }
+}
+
+// Select multiple cells at once
+function selectCells(cells) {
+  // Clear previous selection
+  clearSelection();
+  
+  // Select new cells
+  cells.forEach(cell => {
+    selectedCells.push(cell);
+    cell.style.backgroundColor = '#ffff99'; // Highlight selected cell
+  });
+}
+
+// Get all cells in a rectangular area between two cells
+function getCellsInRectangle(startCell, endCell) {
+  const startRow = startCell.parentElement.rowIndex;
+  const startCol = Array.prototype.indexOf.call(startCell.parentElement.children, startCell);
+  const endRow = endCell.parentElement.rowIndex;
+  const endCol = Array.prototype.indexOf.call(endCell.parentElement.children, endCell);
+  
+  const minRow = Math.min(startRow, endRow);
+  const maxRow = Math.max(startRow, endRow);
+  const minCol = Math.min(startCol, endCol);
+  const maxCol = Math.max(startCol, endCol);
+  
+  const table = startCell.closest('table');
+  const rows = table.rows;
+  const cells = [];
+  
+  for (let r = minRow; r <= maxRow; r++) {
+    const row = rows[r];
+    for (let c = minCol; c <= maxCol; c++) {
+      if (row.cells[c]) {
+        cells.push(row.cells[c]);
+      }
+    }
+  }
+  
+  return cells;
 }
 
 // Clear all selections
