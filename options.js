@@ -9,20 +9,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load settings from Chrome storage
 function loadSettings() {
-  chrome.storage.sync.get(['useCSV'], function(result) {
+  chrome.storage.sync.get(['useCSV', 'quoteStrings'], function(result) {
     const useCSV = result.useCSV || false;
+    const quoteStrings = result.quoteStrings || false;
+    
     document.getElementById('csvToggle').checked = useCSV;
+    document.getElementById('quoteStringsToggle').checked = quoteStrings;
   });
 }
 
 // Set up event listeners
 function setupEventListeners() {
   const csvToggle = document.getElementById('csvToggle');
+  const quoteStringsToggle = document.getElementById('quoteStringsToggle');
   
   // Listen for changes to the CSV toggle
   csvToggle.addEventListener('change', function() {
     const useCSV = this.checked;
     saveSetting('useCSV', useCSV);
+  });
+  
+  // Listen for changes to the quote strings toggle
+  quoteStringsToggle.addEventListener('change', function() {
+    const quoteStrings = this.checked;
+    saveSetting('quoteStrings', quoteStrings);
   });
 }
 

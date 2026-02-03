@@ -161,9 +161,10 @@ function clearSelection() {
 function copySelectedData() {
   if (selectedCells.length === 0) return;
   
-  // Get settings for CSV format
-  chrome.storage.sync.get(['useCSV'], (result) => {
+  // Get settings for CSV format and quote strings
+  chrome.storage.sync.get(['useCSV', 'quoteStrings'], (result) => {
     const useCSV = result.useCSV || false;
+    const quoteStrings = result.quoteStrings || false;
     const delimiter = useCSV ? ',' : '\t';
     
     // Group cells by row and sort by column index
@@ -192,9 +193,26 @@ function copySelectedData() {
         return rows[rowIndex].sort((a, b) => a.colIndex - b.colIndex);
       });
     
-    // Build the output with proper row/column structure
+    // Determine column types if quoting is enabled
+    let columnTypes = {};
+    if (quoteStrings && sortedRows.length > 0) {
+      const maxCols = sortedRows[0].length;
+      for (let col = 0; col < maxCols; col++) {
+        if (sortedRows[0][col]) {
+          columnTypes[col] = isStringValue(sortedRows[0][col].text);
+        }
+      }
+    }
+    
+    // Build the output with proper row/column structure and quoting
     const output = sortedRows.map(rowCells => {
-      return rowCells.map(cellData => cellData.text).join(delimiter);
+      return rowCells.map((cellData, colIndex) => {
+        let cellText = cellData.text;
+        if (quoteStrings && columnTypes[colIndex]) {
+          cellText = `"${cellText}"`;
+        }
+        return cellText;
+      }).join(delimiter);
     }).join('\n');
     
     // Copy to clipboard
@@ -212,9 +230,10 @@ function copySelectedData() {
 function copySelectedDataFlipped() {
   if (selectedCells.length === 0) return;
   
-  // Get settings for CSV format
-  chrome.storage.sync.get(['useCSV'], (result) => {
+  // Get settings for CSV format and quote strings
+  chrome.storage.sync.get(['useCSV', 'quoteStrings'], (result) => {
     const useCSV = result.useCSV || false;
+    const quoteStrings = result.quoteStrings || false;
     const delimiter = useCSV ? ',' : '\t';
     
     // Group cells by row and sort by column index
@@ -260,9 +279,22 @@ function copySelectedDataFlipped() {
       flippedData.push(flippedRow);
     }
     
-    // Build the output with flipped row/column structure
+    // Determine column types if quoting is enabled (first row of flipped data)
+    let columnTypes = {};
+    if (quoteStrings && flippedData.length > 0) {
+      for (let col = 0; col < flippedData[0].length; col++) {
+        columnTypes[col] = isStringValue(flippedData[0][col]);
+      }
+    }
+    
+    // Build the output with flipped row/column structure and quoting
     const output = flippedData.map(rowCells => {
-      return rowCells.join(delimiter);
+      return rowCells.map((cellText, colIndex) => {
+        if (quoteStrings && columnTypes[colIndex]) {
+          return `"${cellText}"`;
+        }
+        return cellText;
+      }).join(delimiter);
     }).join('\n');
     
     // Copy to clipboard
@@ -274,6 +306,26 @@ function copySelectedDataFlipped() {
       console.error('Failed to copy: ', err);
     });
   });
+}
+
+// Helper function to determine if a value is a string (not numeric)
+function isStringValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return true; // Treat empty/null as string
+  }
+  
+  // Check if it's a number (including scientific notation)
+  const trimmed = value.trim();
+  if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed)) {
+    return false; // It's a number
+  }
+  
+  // Check if it looks like a date (YYYY-MM-DD or MM/DD/YYYY format)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed) || /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    return false; // It's a date
+  }
+  
+  return true; // It's a string
 }
 
 // Initialize when DOM is ready
