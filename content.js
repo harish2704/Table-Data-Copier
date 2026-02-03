@@ -161,11 +161,13 @@ function clearSelection() {
 function copySelectedData() {
   if (selectedCells.length === 0) return;
   
-  // Get settings for CSV format and quote strings
-  chrome.storage.sync.get(['useCSV', 'quoteStrings'], (result) => {
+  // Get settings for CSV format, quote strings, and quote type
+  chrome.storage.sync.get(['useCSV', 'quoteStrings', 'quoteType'], (result) => {
     const useCSV = result.useCSV || false;
     const quoteStrings = result.quoteStrings || false;
+    const quoteType = result.quoteType || 'double';
     const delimiter = useCSV ? ',' : '\t';
+    const quoteChar = quoteType === 'single' ? "'" : '"';
     
     // Group cells by row and sort by column index
     const rows = {};
@@ -209,7 +211,7 @@ function copySelectedData() {
       return rowCells.map((cellData, colIndex) => {
         let cellText = cellData.text;
         if (quoteStrings && columnTypes[colIndex]) {
-          cellText = `"${cellText}"`;
+          cellText = `${quoteChar}${cellText}${quoteChar}`;
         }
         return cellText;
       }).join(delimiter);
@@ -230,11 +232,13 @@ function copySelectedData() {
 function copySelectedDataFlipped() {
   if (selectedCells.length === 0) return;
   
-  // Get settings for CSV format and quote strings
-  chrome.storage.sync.get(['useCSV', 'quoteStrings'], (result) => {
+  // Get settings for CSV format, quote strings, and quote type
+  chrome.storage.sync.get(['useCSV', 'quoteStrings', 'quoteType'], (result) => {
     const useCSV = result.useCSV || false;
     const quoteStrings = result.quoteStrings || false;
+    const quoteType = result.quoteType || 'double';
     const delimiter = useCSV ? ',' : '\t';
+    const quoteChar = quoteType === 'single' ? "'" : '"';
     
     // Group cells by row and sort by column index
     const rows = {};
@@ -291,7 +295,7 @@ function copySelectedDataFlipped() {
     const output = flippedData.map(rowCells => {
       return rowCells.map((cellText, colIndex) => {
         if (quoteStrings && columnTypes[colIndex]) {
-          return `"${cellText}"`;
+          return `${quoteChar}${cellText}${quoteChar}`;
         }
         return cellText;
       }).join(delimiter);

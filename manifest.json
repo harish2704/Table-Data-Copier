@@ -32,8 +32,8 @@
   "commands": {
     "copy-table-data": {
       "suggested_key": {
-        "default": "Ctrl+Shift+C",
-        "mac": "Command+Shift+C"
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
       },
       "description": "Copy selected table data"
     },
