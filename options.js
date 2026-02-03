@@ -4,6 +4,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   loadSettings();
   setupEventListeners();
+  loadShortcutInfo();
 });
 
 // Load settings from Chrome storage
@@ -44,4 +45,16 @@ function showSaveStatus(message) {
   setTimeout(function() {
     status.textContent = '';
   }, 2000);
+}
+
+// Load and display keyboard shortcut information
+function loadShortcutInfo() {
+  // Get the current shortcut from Chrome commands API
+  chrome.commands.getAll((commands) => {
+    const copyCommand = commands.find(cmd => cmd.name === 'copy-table-data');
+    if (copyCommand) {
+      const shortcutElement = document.getElementById('currentShortcut');
+      shortcutElement.textContent = copyCommand.shortcut || 'Ctrl+Shift+C';
+    }
+  });
 }

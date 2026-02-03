@@ -11,7 +11,8 @@
   "permissions": [
     "activeTab",
     "contextMenus",
-    "storage"
+    "storage",
+    "commands"
   ],
   "background": {
     "service_worker": "background.js"
@@ -27,5 +28,14 @@
   "action": {
     "default_popup": "options.html",
     "default_title": "Table Data Copier Settings"
+  },
+  "commands": {
+    "copy-table-data": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Copy selected table data"
+    }
   }
 }

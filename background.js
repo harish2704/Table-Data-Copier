@@ -17,6 +17,19 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
+// Handle keyboard shortcut commands
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'copy-table-data') {
+    // Get the active tab
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length > 0) {
+        // Send message to content script to copy table data
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'copyTableData' });
+      }
+    });
+  }
+});
+
 // Handle storage changes
 chrome.storage.onChanged.addListener((changes, namespace) => {
   for (let key in changes) {
