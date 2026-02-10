@@ -4,6 +4,7 @@ let selectedCells = [];
 let isTableSelectionMode = false;
 let dragStartCell = null;
 let isDragging = false;
+let scrollInterval = null;
 
 // Initialize the extension
 function init() {
@@ -58,6 +59,9 @@ function handleMouseDown(event) {
 // Handle mouse move events for drag selection
 function handleMouseMove(event) {
   if (isDragging && dragStartCell) {
+    // Handle auto-scrolling when mouse is near edges
+    handleAutoScroll(event);
+
     const target = event.target;
     
     // Check if the target is a table cell
@@ -69,10 +73,83 @@ function handleMouseMove(event) {
   }
 }
 
+// Auto-scroll when mouse is near viewport edges during selection
+function handleAutoScroll(event) {
+  const edgeThreshold = 100; // pixels from edge to start scrolling
+  const scrollSpeed = 50; // pixels per scroll tick
+  
+  const mouseX = event.clientX;
+  const mouseY = event.clientY;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+  
+  let shouldScroll = false;
+  let scrollX = 0;
+  let scrollY = 0;
+  
+  // Check if near top edge
+  if (mouseY < edgeThreshold) {
+    scrollY = -scrollSpeed;
+    shouldScroll = true;
+  }
+  // Check if near bottom edge
+  else if (mouseY > viewportHeight - edgeThreshold) {
+    scrollY = scrollSpeed;
+    shouldScroll = true;
+  }
+  
+  // Check if near left edge
+  if (mouseX < edgeThreshold) {
+    scrollX = -scrollSpeed;
+    shouldScroll = true;
+  }
+  // Check if near right edge
+  else if (mouseX > viewportWidth - edgeThreshold) {
+    scrollX = scrollSpeed;
+    shouldScroll = true;
+  }
+  
+  if (shouldScroll) {
+    // Start or continue scrolling
+    if (!scrollInterval) {
+      scrollInterval = setInterval(() => {
+        window.scrollBy(scrollX, scrollY);
+        
+        // After scrolling, find the cell under the mouse and update selection
+        // We need to account for the scroll offset
+        const actualMouseX = mouseX + scrollLeft;
+        const actualMouseY = mouseY + scrollTop;
+        
+        // Get element at the new position
+        const elementAtPosition = document.elementFromPoint(mouseX, mouseY);
+        
+        if (elementAtPosition && (elementAtPosition.tagName === 'TD' || elementAtPosition.tagName === 'TH')) {
+          const cellsToSelect = getCellsInRectangle(dragStartCell, elementAtPosition);
+          selectCells(cellsToSelect);
+        }
+      }, 50);
+    }
+  } else {
+    // Stop scrolling
+    stopAutoScroll();
+  }
+}
+
+// Stop auto-scrolling
+function stopAutoScroll() {
+  if (scrollInterval) {
+    clearInterval(scrollInterval);
+    scrollInterval = null;
+  }
+}
+
 // Handle mouse up events to end drag selection
 function handleMouseUp(event) {
   isDragging = false;
   dragStartCell = null;
+  stopAutoScroll();
   document.removeEventListener('mousemove', handleMouseMove);
   document.removeEventListener('mouseup', handleMouseUp);
 }
