@@ -261,7 +261,7 @@ function copySelectedData() {
       rows[rowIndex].push({
         cell: cell,
         colIndex: colIndex,
-        text: cell.textContent.trim().replace(/\s+/g, ' ')
+        text: cell.innerText.trim().replace(/\s+/g, ' ')
       });
     });
     
@@ -332,7 +332,7 @@ function copySelectedDataFlipped() {
       rows[rowIndex].push({
         cell: cell,
         colIndex: colIndex,
-        text: cell.textContent.trim().replace(/\s+/g, ' ')
+        text: cell.innerText.trim().replace(/\s+/g, ' ')
       });
     });
     
