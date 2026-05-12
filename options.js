@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load settings from Chrome storage
 function loadSettings() {
   chrome.storage.sync.get(['useCSV', 'quoteStrings', 'quoteType'], function(result) {
-    const useCSV = result.useCSV || true;
-    const quoteStrings = result.quoteStrings || true;
+    const useCSV = result.useCSV ?? true;
+    const quoteStrings = result.quoteStrings ?? true;
     const quoteType = result.quoteType || 'double';
     
     document.getElementById('csvToggle').checked = useCSV;
